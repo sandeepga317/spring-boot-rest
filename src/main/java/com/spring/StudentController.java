@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.spring.entity.StudentEntity;
+import com.spring.exception.StudentNotFoundException;
+import com.spring.repository.StudentCriteriaExecutor;
 import com.spring.repository.StudentRepository;
 
 @RestController
@@ -25,6 +27,9 @@ public class StudentController {
 	
 	@Autowired
 	StudentRepository studentRepository;
+	
+	@Autowired
+	StudentCriteriaExecutor studentCriteriaExecutor;
 	
 	@GetMapping(value="/students")
 	public ResponseEntity<Iterable<StudentEntity>> getAllStudents(){
@@ -81,11 +86,23 @@ public class StudentController {
 			studentEntity.get().setName(student.getName());
 			studentRepository.save(studentEntity.get());
 			
+		}else {
+			throw new StudentNotFoundException("Student not found for id:"+id);
 		}
 		
 		return HttpStatus.ACCEPTED;
 		
 	}
 	
+	@GetMapping(value="/criteria/students")
+	public ResponseEntity<Iterable<StudentEntity>> getAllStudentsFromCriteria(
+			@RequestParam(value = "name", required= false) String name,
+			@RequestParam(value = "age", required= false) Long age,
+			@RequestParam(value = "contact", required= false) String contact){
+		Iterable<StudentEntity> students = null;
+		students = studentCriteriaExecutor.getStudentsAgeGreater(age,contact, name);
+		
+		return new ResponseEntity<>(students,HttpStatus.OK);
+	}
 
 }
